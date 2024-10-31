@@ -1,2 +1,2 @@
 # FluidSim
-A Fluid Simulation written using SDL and VUlkan, all in the C programming language
+A Fluid Simulation written using SDL and Vulkan, all in the C programming language
