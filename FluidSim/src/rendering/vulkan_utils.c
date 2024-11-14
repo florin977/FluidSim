@@ -63,17 +63,15 @@ void baseSetupVulkan(SDL_Window *window)
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
     unsigned int extensionCount = 0;
-    if (!SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, NULL))
+    if (!SDL_Vulkan_GetInstanceExtensions(&extensionCount))
     {
         printf("Failed to get the number of Vulkan extensions required: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
-    const char **extensions = malloc(sizeof(const char *) * extensionCount);
-    if (!SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, extensions))
+    if (extensionCount == 0)
     {
-        printf("Failed to get Vulkan extensions: %s\n", SDL_GetError());
-        free(extensions);
+        printf("Failed to get the number of Vulkan extensions required: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
@@ -81,7 +79,7 @@ void baseSetupVulkan(SDL_Window *window)
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
     createInfo.enabledExtensionCount = extensionCount;
-    createInfo.ppEnabledExtensionNames = extensions;
+    createInfo.ppEnabledExtensionNames = SDL_Vulkan_GetInstanceExtensions(&extensionCount);
 
     if (enableValidationLayers)
     {
@@ -96,12 +94,9 @@ void baseSetupVulkan(SDL_Window *window)
     if (vkCreateInstance(&createInfo, NULL, &instance) != VK_SUCCESS)
     {
         printf("Failed to create Vulkan instance.\n");
-        free(extensions);
         exit(EXIT_FAILURE);
     }
-
-    free(extensions);
-
+    
     printf("Vulkan instance created successfully.\n");
 }
 
@@ -129,10 +124,9 @@ VkPhysicalDevice selectGPU(VkInstance instance)
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
-        //Query device features
+        // Query device features
         VkPhysicalDeviceFeatures deviceFeatures;
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
 
         // Check for suitable device
         if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader)
@@ -174,7 +168,7 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
     free(queueFamilies);
 
     if (indices.graphicsFamily == -1)
-    { 
+    {
         fprintf(stderr, "Error: Required queue families not found.\n");
         exit(EXIT_FAILURE);
     }
@@ -187,19 +181,19 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
 void createLogicalDevice()
 {
 
-    //Number of queues for a queue family. Only one wirh graphics for now
+    // Number of queues for a queue family. Only one wirh graphics for now
     VkDeviceQueueCreateInfo queueCreateInfo = {};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = indices.graphicsFamily;
     queueCreateInfo.queueCount = 1;
 
-    //Priority of the queue
+    // Priority of the queue
     float queuePriority = 1.0f;
     queueCreateInfo.pQueuePriorities = &queuePriority;
 
-    //Features of the device
+    // Features of the device
     VkPhysicalDeviceFeatures deviceFeatures = {};
-    
+
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pQueueCreateInfos = &queueCreateInfo;
@@ -207,28 +201,27 @@ void createLogicalDevice()
     createInfo.pEnabledFeatures = &deviceFeatures;
 
     createInfo.enabledExtensionCount = 0;
-    
-    if (enableValidationLayers) 
+
+    if (enableValidationLayers)
     {
-        createInfo.enabledLayerCount = sizeof(validationLayers)/sizeof(validationLayers[0]);
+        createInfo.enabledLayerCount = sizeof(validationLayers) / sizeof(validationLayers[0]);
         createInfo.ppEnabledLayerNames = validationLayers;
-    } 
-    else 
+    }
+    else
     {
         createInfo.enabledLayerCount = 0;
     }
 
-    if (vkCreateDevice(physicalDevice, &createInfo, NULL, &device) != VK_SUCCESS) 
+    if (vkCreateDevice(physicalDevice, &createInfo, NULL, &device) != VK_SUCCESS)
     {
         fprintf(stderr, "Failed to create logical device!\n");
         exit(EXIT_FAILURE);
     }
 
-    //Get graphics queue handles
+    // Get graphics queue handles
     vkGetDeviceQueue(device, indices.graphicsFamily, 0, &graphicsQueue);
 
     printf("Logical device created succesfully\n");
-    
 }
 
 void initVulkan(SDL_Window *window)

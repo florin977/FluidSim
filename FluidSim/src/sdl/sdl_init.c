@@ -6,13 +6,13 @@ SDL_Window *window = NULL;
 
 void setupWindow(SDL_Window **window)
 {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
         printf("Couldn't initialize SDL: %s \n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
-    *window = SDL_CreateWindow("SDL Vulkan Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_VULKAN);
+    *window = SDL_CreateWindow("SDL Vulkan Window", 1280, 720, SDL_WINDOW_VULKAN);
 
     if (!*window)
     {

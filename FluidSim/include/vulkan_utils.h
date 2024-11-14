@@ -1,9 +1,9 @@
 #ifndef VULKAN_UTILS_H
 #define VULKAN_UTILS_H
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
-#include <SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 
 typedef struct {
     int graphicsFamily;

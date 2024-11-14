@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 
     initVulkan(window);
 
-    printf("Using GPU: %p\n", (void*)physicalDevice);
+    //printf("Using GPU: %p\n", (void*)physicalDevice);
     
     SDL_Event event;
 
@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     {
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_EVENT_QUIT)
             {
                 running = 0;
             }
