@@ -6,12 +6,9 @@
 
 int main(int argc, char* argv[])
 {
-    
     setupWindow(&window);
 
-    setupVulkan(window);
-    
-    VkPhysicalDevice physicalDevice = selectGPU(instance);
+    initVulkan(window);
 
     printf("Using GPU: %p\n", (void*)physicalDevice);
     

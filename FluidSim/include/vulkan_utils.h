@@ -5,11 +5,27 @@
 #include <vulkan/vulkan.h>
 #include <SDL_vulkan.h>
 
-extern VkInstance instance;
+typedef struct {
+    int graphicsFamily;
+    int presentFamily;
+} QueueFamilyIndices;
 
-void setupVulkan(SDL_Window *window);
+extern VkInstance instance;
+extern VkSurfaceKHR surface;
+extern VkDevice device;
+extern VkQueue graphicsQueue;
+extern VkQueue presentQueue;
+extern VkPhysicalDevice physicalDevice;
+
+extern const char* validationLayers[];
+
+void baseSetupVulkan(SDL_Window *window);
 
 VkPhysicalDevice selectGPU(VkInstance instance);
+
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+
+void initVulkan(SDL_Window* window);
 
 void quitVulkan();
 
