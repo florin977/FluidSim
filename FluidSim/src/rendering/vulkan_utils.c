@@ -218,7 +218,6 @@ void createLogicalDevice()
         createInfo.enabledLayerCount = 0;
     }
 
-    //Segmentation Fault right here at the VkCreateDevice
     if (vkCreateDevice(physicalDevice, &createInfo, NULL, &device) != VK_SUCCESS) 
     {
         fprintf(stderr, "Failed to create logical device!\n");
