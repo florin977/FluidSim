@@ -9,8 +9,6 @@ int main(int argc, char* argv[])
     setupWindow(&window);
 
     initVulkan(window);
-
-    //printf("Using GPU: %p\n", (void*)physicalDevice);
     
     SDL_Event event;
 
@@ -30,6 +28,7 @@ int main(int argc, char* argv[])
     }    
 
     quitSDL(&window);
+    quitVulkan();
 
     return 0;
 }

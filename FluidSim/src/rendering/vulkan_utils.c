@@ -12,6 +12,12 @@ QueueFamilyIndices indices;
 
 const int enableValidationLayers = 1; // Turn off for release
 
+unsigned int logicalDeviceExtensionCount = 1;
+
+const char *requiredExtensions[] = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
 const char *validationLayers[] = {
     "VK_LAYER_KHRONOS_validation"};
 
@@ -46,7 +52,7 @@ int checkValidationLayerSupport()
     return 1;
 }
 
-void baseSetupVulkan(SDL_Window *window)
+void baseSetupVulkan(SDL_Window* window)
 {
     if (enableValidationLayers && !checkValidationLayerSupport())
     {
@@ -63,15 +69,12 @@ void baseSetupVulkan(SDL_Window *window)
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
     unsigned int extensionCount = 0;
-    if (!SDL_Vulkan_GetInstanceExtensions(&extensionCount))
-    {
-        printf("Failed to get the number of Vulkan extensions required: %s\n", SDL_GetError());
-        exit(EXIT_FAILURE);
-    }
 
-    if (extensionCount == 0)
+    const char* const* extensions = SDL_Vulkan_GetInstanceExtensions(&extensionCount);
+
+    if (extensionCount == 0 || !extensions)
     {
-        printf("Failed to get the number of Vulkan extensions required: %s\n", SDL_GetError());
+        printf("Failed to get required Vulkan extensions: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
@@ -79,7 +82,7 @@ void baseSetupVulkan(SDL_Window *window)
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
     createInfo.enabledExtensionCount = extensionCount;
-    createInfo.ppEnabledExtensionNames = SDL_Vulkan_GetInstanceExtensions(&extensionCount);
+    createInfo.ppEnabledExtensionNames = extensions;
 
     if (enableValidationLayers)
     {
@@ -98,6 +101,83 @@ void baseSetupVulkan(SDL_Window *window)
     }
     
     printf("Vulkan instance created successfully.\n");
+}
+
+void createSurface(SDL_Window* window)
+{
+    if (!SDL_Vulkan_CreateSurface(window, instance, NULL, &surface))
+    {
+
+        fprintf(stderr, "Failed to create surface!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Surface created succesfully\n");
+}
+
+int isDeviceCompatible(VkPhysicalDevice device) {
+    //Reset indices
+    indices.graphicsFamily = -1;
+    indices.presentFamily = -1;
+
+    // Find queue families
+    indices = findQueueFamilies(device);
+
+    // Check if both graphics and present queue families are valid
+    if (indices.graphicsFamily == -1 || indices.presentFamily == -1) {
+        return 0; // Not compatible
+    }
+
+    // Query device properties
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+    printf("Testing GPU: %s\n", deviceProperties.deviceName);
+
+    if (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+    {
+        return 0; //Device is not a disrete GPU
+    }
+
+    // Query device features
+    VkPhysicalDeviceFeatures deviceFeatures;
+    vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+    // Ensure the device supports necessary features
+    if (!deviceFeatures.geometryShader) {
+        return 0; // Geometry shader support is mandatory
+    }
+
+    // Check for required extensions
+    unsigned int extensionCount;
+    vkEnumerateDeviceExtensionProperties(device, NULL, &extensionCount, NULL);
+
+    VkExtensionProperties *availableExtensions = malloc(extensionCount * sizeof(VkExtensionProperties));
+    vkEnumerateDeviceExtensionProperties(device, NULL, &extensionCount, availableExtensions);
+
+    int extensionFound = 0;
+
+    for (unsigned long long int i = 0; i < sizeof(requiredExtensions) / sizeof(requiredExtensions[0]); i++) {
+        extensionFound = 0;
+        for (unsigned int j = 0; j < extensionCount; j++) {
+            if (strcmp(requiredExtensions[i], availableExtensions[j].extensionName) == 0) {
+                extensionFound = 1;
+                break;
+            }
+        }
+        if (!extensionFound) {
+            break;
+        }
+    }
+
+    free(availableExtensions);
+
+    // If any required extension is missing, the device is not compatible
+    if (!extensionFound) {
+        return 0;
+    }
+
+    return 1; // Compatible
 }
 
 VkPhysicalDevice selectGPU(VkInstance instance)
@@ -124,12 +204,8 @@ VkPhysicalDevice selectGPU(VkInstance instance)
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
-        // Query device features
-        VkPhysicalDeviceFeatures deviceFeatures;
-        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
         // Check for suitable device
-        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader)
+        if (isDeviceCompatible(device))
         {
             printf("Selected GPU: %s\n", deviceProperties.deviceName);
             selectedDevice = device;
@@ -162,16 +238,18 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
         if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
         {
             indices.graphicsFamily = i;
+
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
+            if (presentSupport)
+            {
+                indices.presentFamily = i;
+            }
         }
     }
 
     free(queueFamilies);
-
-    if (indices.graphicsFamily == -1)
-    {
-        fprintf(stderr, "Error: Required queue families not found.\n");
-        exit(EXIT_FAILURE);
-    }
 
     printf("Indices: %d, %d\n", indices.graphicsFamily, indices.presentFamily);
 
@@ -181,26 +259,48 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
 void createLogicalDevice()
 {
 
-    // Number of queues for a queue family. Only one wirh graphics for now
-    VkDeviceQueueCreateInfo queueCreateInfo = {};
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily;
-    queueCreateInfo.queueCount = 1;
+    int uniqueQueueFamilies[2];
+    int uniqueCount = 0;
+
+    if (indices.graphicsFamily != indices.presentFamily)
+    {
+        uniqueQueueFamilies[0] = indices.graphicsFamily;
+        uniqueQueueFamilies[1] = indices.presentFamily;
+        uniqueCount = 2;
+    }
+    else 
+    {
+        uniqueQueueFamilies[0] = indices.graphicsFamily;
+        uniqueCount = 1;
+    }
+
 
     // Priority of the queue
     float queuePriority = 1.0f;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
+    
+    // Create queue info for every queue we have
+    VkDeviceQueueCreateInfo queueCreateInfos[2] = {};
+    
+    for (int i = 0; i < uniqueCount; i++)
+    {
+        queueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfos[i].queueFamilyIndex = uniqueQueueFamilies[i];
+        queueCreateInfos[i].queueCount = 1;
+        queueCreateInfos[i].pQueuePriorities = &queuePriority;
+    }
 
     // Features of the device
     VkPhysicalDeviceFeatures deviceFeatures = {};
 
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pQueueCreateInfos = &queueCreateInfo;
-    createInfo.queueCreateInfoCount = 1;
+    createInfo.pQueueCreateInfos = queueCreateInfos;
+    createInfo.queueCreateInfoCount = uniqueCount;
     createInfo.pEnabledFeatures = &deviceFeatures;
 
-    createInfo.enabledExtensionCount = 0;
+    //Extensions needed for the swapchain
+    createInfo.enabledExtensionCount = logicalDeviceExtensionCount;
+    createInfo.ppEnabledExtensionNames = requiredExtensions;
 
     if (enableValidationLayers)
     {
@@ -221,14 +321,17 @@ void createLogicalDevice()
     // Get graphics queue handles
     vkGetDeviceQueue(device, indices.graphicsFamily, 0, &graphicsQueue);
 
+    // Get present queue handles
+    vkGetDeviceQueue(device, indices.presentFamily, 0, &presentQueue);
+
     printf("Logical device created succesfully\n");
 }
 
-void initVulkan(SDL_Window *window)
+void initVulkan(SDL_Window* window)
 {
     baseSetupVulkan(window);
+    createSurface(window);
     physicalDevice = selectGPU(instance);
-    indices = findQueueFamilies(physicalDevice);
     createLogicalDevice();
 }
 
@@ -237,16 +340,19 @@ void quitVulkan()
     if (device != VK_NULL_HANDLE)
     {
         vkDestroyDevice(device, NULL);
+        printf("Destroyed device\n");
         device = VK_NULL_HANDLE;
     }
     if (surface != VK_NULL_HANDLE)
     {
         vkDestroySurfaceKHR(instance, surface, NULL);
+        printf("Destroyed surface\n");
         surface = VK_NULL_HANDLE;
     }
     if (instance != VK_NULL_HANDLE)
     {
         vkDestroyInstance(instance, NULL);
+        printf("Destroyed instance\n");
         instance = VK_NULL_HANDLE;
     }
 }

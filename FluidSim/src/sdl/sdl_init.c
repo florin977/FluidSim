@@ -4,7 +4,7 @@
 
 SDL_Window *window = NULL;
 
-void setupWindow(SDL_Window **window)
+void setupWindow(SDL_Window** window)
 {
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
@@ -24,8 +24,9 @@ void setupWindow(SDL_Window **window)
     printf("Window created successfully\n");
 }
 
-void quitSDL(SDL_Window **window)
+void quitSDL(SDL_Window** window)
 {
     SDL_DestroyWindow(*window);
     SDL_Quit();
+    printf("Destroyed window\n");
 }

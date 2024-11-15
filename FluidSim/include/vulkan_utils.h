@@ -17,6 +17,10 @@ extern VkQueue graphicsQueue;
 extern VkQueue presentQueue;
 extern VkPhysicalDevice physicalDevice;
 
+
+extern unsigned int logicalDeviceExtensionCount;
+extern const char* requiredExtensions[];
+
 extern const char* validationLayers[];
 
 void baseSetupVulkan(SDL_Window *window);
