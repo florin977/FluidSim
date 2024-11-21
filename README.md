@@ -8,4 +8,6 @@ A Fluid Simulation written using SDL3 and Vulkan, all in the C programming langu
 - [X] Select a compatible GPU
 - [X] Create a logical device   
 - [X] Create a Vulkan surface
-- [ ] Create the swapchain
+- [X] Create the swapchain
+- [ ] Use the image views
+- [ ] Create the graphics pipeline
