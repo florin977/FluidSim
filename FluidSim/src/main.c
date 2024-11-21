@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
         //Vulkan rendering here
     }    
 
-    quitSDL(&window);
     quitVulkan();
+    quitSDL(&window);
 
     return 0;
 }
