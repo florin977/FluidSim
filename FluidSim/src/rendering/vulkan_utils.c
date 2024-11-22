@@ -14,7 +14,9 @@ VkSwapchainKHR swapChain = VK_NULL_HANDLE;
 VkFormat swapChainImageFormat;
 VkExtent2D swapChainExtent;
 
+uint32_t imageCount = 0;
 VkImage* swapChainImages;
+VkImageView* swapChainImageViews;
 
 const int enableValidationLayers = 1; // Turn off for release
 
@@ -453,7 +455,10 @@ void createSwapChain(SDL_Window* window) {
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModeCount, swapChainSupport.presentModes);
     VkExtent2D extent = chooseSwapExtent(&swapChainSupport.capabilities, window);
 
-    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+    //To ensure the image views use the same format
+    swapChainImageFormat = surfaceFormat.format;
+    
+    imageCount = swapChainSupport.capabilities.minImageCount + 1;
 
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) 
     {
@@ -512,6 +517,40 @@ void createSwapChain(SDL_Window* window) {
     printf("Swap Chain created successfully\n");
 }
 
+void createImageViews()
+{
+    swapChainImageViews = malloc(imageCount * sizeof(VkImageView));
+
+    for (int i = 0; i < imageCount; i++)
+    {
+        VkImageViewCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.image = swapChainImages[i];
+
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = swapChainImageFormat;
+
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.layerCount = 1;
+
+        if (vkCreateImageView(device, &createInfo, NULL, &swapChainImageViews[i]) != VK_SUCCESS) 
+        {
+            fprintf(stderr, "failed to create image views!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Image Views created  successfully\n");
+    }
+}
+
 
 void initVulkan(SDL_Window* window)
 {
@@ -520,16 +559,30 @@ void initVulkan(SDL_Window* window)
     physicalDevice = selectGPU(instance);
     createLogicalDevice();
     createSwapChain(window);
+    createImageViews();
 }
 
 void quitVulkan()
 {
     if (device != VK_NULL_HANDLE && swapChain != VK_NULL_HANDLE)
     {
+        if (swapChainImageViews != NULL)
+        {
+            for (int i = 0; i < imageCount; i++)
+            {
+                vkDestroyImageView(device, swapChainImageViews[i], NULL);
+            }
+        }
+
+        free(swapChainImageViews);
+        swapChainImageViews = NULL;
+
         free(swapChainImages);
         swapChainImages = NULL;
+        
         vkDestroySwapchainKHR(device, swapChain, NULL);
         printf("Destroyed swap chain\n");
+        
         swapChain = VK_NULL_HANDLE;
     }
     if (device != VK_NULL_HANDLE)

@@ -25,7 +25,6 @@ extern VkQueue graphicsQueue;
 extern VkQueue presentQueue;
 extern VkPhysicalDevice physicalDevice;
 
-
 extern unsigned int logicalDeviceExtensionCount;
 extern const char* requiredExtensions[];
 
@@ -35,7 +34,9 @@ extern VkSwapchainKHR swapChain;
 extern VkFormat swapChainImageFormat;
 extern VkExtent2D swapChainExtent;
 
+extern uint32_t imageCount;
 extern VkImage* swapChainImages;
+extern VkImageView* swapChainImageViews;
 
 
 void baseSetupVulkan(SDL_Window *window);
@@ -53,6 +54,8 @@ VkPresentModeKHR chooseSwapPresentMode(const uint32_t availablePresentModesCount
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR* capabilitites, SDL_Window* window);
 
 void createSwapChain();
+
+void createImageViews();
 
 void initVulkan(SDL_Window* window);
 
