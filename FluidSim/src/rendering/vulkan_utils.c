@@ -457,7 +457,7 @@ void createSwapChain(SDL_Window* window) {
 
     //To ensure the image views use the same format
     swapChainImageFormat = surfaceFormat.format;
-    
+
     imageCount = swapChainSupport.capabilities.minImageCount + 1;
 
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) 
@@ -552,6 +552,69 @@ void createImageViews()
 }
 
 
+static char* readFile(const char* filename, size_t* outSize) {
+    // Open the file in binary mode
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        perror("failed to open file");
+        return NULL;
+    }
+
+    // Seek to the end of the file to determine the size
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    rewind(file);  // Go back to the beginning of the file
+
+    // Allocate memory to store the file's contents
+    char* buffer = (char*)malloc(fileSize);
+    if (!buffer) {
+        perror("failed to allocate memory");
+        fclose(file);
+        return NULL;
+    }
+
+    // Read the contents of the file into the buffer
+    size_t bytesRead = fread(buffer, 1, fileSize, file);
+    if (bytesRead != fileSize) {
+        fprintf(stderr, "failed to read the entire file");
+        free(buffer);
+        fclose(file);
+        exit(EXIT_FAILURE);
+    }
+
+    // Close the file
+    fclose(file);
+
+    // Set the size of the file (for later use)
+    *outSize = fileSize;
+
+    // Return the buffer containing the file's contents
+    return buffer;
+}
+
+void createGraphicsPipeline() {
+    size_t vertShaderSize, fragShaderSize;
+
+    // Load the shader files
+    char* vertShaderCode = readFile("../shaders/vert.spv", &vertShaderSize);
+    char* fragShaderCode = readFile("../shaders/frag.spv", &fragShaderSize);
+
+    // Check if shaders were loaded successfully
+    if (vertShaderCode == NULL || fragShaderCode == NULL) {
+        
+        free(vertShaderCode);
+        free(fragShaderCode);
+        return;
+    }
+
+    // Print the size of the loaded shaders to verify the file sizes
+    printf("Vertex shader size: %zu bytes\n", vertShaderSize);
+    printf("Fragment shader size: %zu bytes\n", fragShaderSize);
+    
+    free(vertShaderCode);
+    free(fragShaderCode);
+}
+
 void initVulkan(SDL_Window* window)
 {
     baseSetupVulkan(window);
@@ -560,6 +623,7 @@ void initVulkan(SDL_Window* window)
     createLogicalDevice();
     createSwapChain(window);
     createImageViews();
+    createGraphicsPipeline();
 }
 
 void quitVulkan()

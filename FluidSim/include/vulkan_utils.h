@@ -57,6 +57,8 @@ void createSwapChain();
 
 void createImageViews();
 
+void createGraphicsPipeline();
+
 void initVulkan(SDL_Window* window);
 
 void quitVulkan();
