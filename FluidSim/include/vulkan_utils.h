@@ -57,6 +57,8 @@ void createSwapChain();
 
 void createImageViews();
 
+VkShaderModule createShaderModule(VkDevice device, const char* shaderCode, size_t codeSize);
+
 void createGraphicsPipeline();
 
 void initVulkan(SDL_Window* window);
