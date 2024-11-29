@@ -10,4 +10,7 @@ A Fluid Simulation written using SDL3 and Vulkan, all in the C programming langu
 - [X] Create a Vulkan surface
 - [X] Create the swapchain
 - [X] Use the image views
-- [ ] Create the graphics pipeline
+- [X] Create the graphics pipeline
+- [ ] Framebuffers
+- [ ] Commandbuffers
+- [ ] Drawing and presentation
