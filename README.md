@@ -13,4 +13,4 @@ A Fluid Simulation written using SDL3 and Vulkan, all in the C programming langu
 - [X] Create the graphics pipeline
 - [ ] Framebuffers
 - [ ] Commandbuffers
-- [ ] Drawing and presentation
+- [ ] Rendering and presentation
