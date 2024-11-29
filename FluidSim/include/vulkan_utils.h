@@ -37,6 +37,11 @@ extern VkExtent2D swapChainExtent;
 extern uint32_t imageCount;
 extern VkImage* swapChainImages;
 extern VkImageView* swapChainImageViews;
+extern VkDynamicState dynamicStates[2];
+
+extern VkRenderPass renderPass;
+extern VkPipelineLayout pipelineLayout;
+extern VkPipeline graphicsPipeline;
 
 
 void baseSetupVulkan(SDL_Window *window);
@@ -58,6 +63,8 @@ void createSwapChain();
 void createImageViews();
 
 VkShaderModule createShaderModule(VkDevice device, const char* shaderCode, size_t codeSize);
+
+void createRenderPass();
 
 void createGraphicsPipeline();
 
