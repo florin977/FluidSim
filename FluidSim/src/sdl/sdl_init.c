@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-SDL_Window *window = NULL;
+SDL_Window* window = NULL;
 
 void setupWindow(SDL_Window** window)
 {
@@ -12,7 +12,7 @@ void setupWindow(SDL_Window** window)
         exit(EXIT_FAILURE);
     }
 
-    *window = SDL_CreateWindow("SDL Vulkan Window", 1280, 720, SDL_WINDOW_VULKAN);
+    *window = SDL_CreateWindow("SDL Vulkan Window", 1920, 1080, SDL_WINDOW_VULKAN);
 
     if (!*window)
     {

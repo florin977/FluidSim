@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
 #include <SDL3/SDL_vulkan.h>
+#include <SDL3/SDL_video.h>
 
 typedef struct {
     int graphicsFamily;
@@ -43,6 +44,13 @@ extern VkRenderPass renderPass;
 extern VkPipelineLayout pipelineLayout;
 extern VkPipeline graphicsPipeline;
 
+extern VkFramebuffer* swapChainFramebuffers;
+extern VkCommandPool commandPool;
+extern VkCommandBuffer commandBuffer;
+
+extern VkSemaphore imageAvailableSemaphore;
+extern VkSemaphore renderFinishedSemaphore;
+extern VkFence inFlightFence;
 
 void baseSetupVulkan(SDL_Window *window);
 
@@ -67,6 +75,16 @@ VkShaderModule createShaderModule(VkDevice device, const char* shaderCode, size_
 void createRenderPass();
 
 void createGraphicsPipeline();
+
+void createFrameBuffers();
+
+void createCommandPool();
+
+void createCommandBuffer();
+
+void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+void createSyncObjects();
 
 void initVulkan(SDL_Window* window);
 
